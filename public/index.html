@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strava → GPX</title>
+  <style>
+    :root {
+      --bg: #f6f6f4; --card: #fff; --text: #1d1d1b; --muted: #6b6b66;
+      --accent: #fc4c02; --accent-text: #fff; --border: #e2e2dd; --err-bg: #fdecea; --err: #a1260d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141413; --card: #1f1f1d; --text: #ededea; --muted: #9a9a94;
+        --border: #34342f; --err-bg: #3a1b14; --err: #ffb4a1;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+      background: var(--bg); color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main {
+      width: 100%; max-width: 520px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    h1 span { color: var(--accent); }
+    p.sub { margin: 0 0 24px; color: var(--muted); font-size: .95rem; }
+    form { display: flex; flex-direction: column; gap: 12px; }
+    input {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font: inherit;
+    }
+    input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    button, .btn {
+      display: inline-block; text-align: center; padding: 12px 16px; border: 0; border-radius: 10px;
+      background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+    }
+    button:hover, .btn:hover { filter: brightness(1.08); }
+    .status { margin-top: 20px; font-size: .9rem; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .status a { color: var(--muted); }
+    .error { background: var(--err-bg); color: var(--err); padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; font-size: .92rem; }
+    .hint { margin-top: 20px; font-size: .82rem; color: var(--muted); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Strava <span>→</span> GPX</h1>
+    <p class="sub">Colle le lien d'une activité ou d'un itinéraire Strava pour télécharger son fichier GPX.</p>
+
+    <div id="error" class="error" hidden></div>
+
+    <form action="/download" method="get">
+      <input name="url" id="url" type="text" inputmode="url" autocomplete="off" required
+             placeholder="https://www.strava.com/activities/123456789" />
+      <button type="submit">Télécharger le GPX</button>
+    </form>
+
+    <div class="status">
+      <span id="who">…</span>
+      <a id="logout" href="/logout" hidden>Se déconnecter</a>
+    </div>
+
+    <p class="hint">
+      Itinéraires (<code>/routes/…</code>) : publics ou les tiens.<br />
+      Activités (<code>/activities/…</code>) : uniquement les tiennes (limite de l'API Strava).
+    </p>
+  </main>
+
+  <script>
+    const ERRORS = {
+      url: "URL non reconnue. Format attendu : strava.com/activities/… ou strava.com/routes/…",
+      auth: "La connexion à Strava a échoué. Réessaie.",
+      notfound: "Introuvable ou inaccessible. Pour les activités, seules les tiennes sont accessibles via l'API Strava.",
+      nogps: "Cette activité n'a pas de trace GPS.",
+      api: "Erreur de l'API Strava. Réessaie dans un instant.",
+    };
+    const q = new URLSearchParams(location.search);
+    if (q.get("error")) {
+      const el = document.getElementById("error");
+      el.textContent = ERRORS[q.get("error")] || "Erreur inconnue.";
+      el.hidden = false;
+    }
+    if (q.get("url")) document.getElementById("url").value = q.get("url");
+    if (q.toString()) history.replaceState(null, "", "/");
+
+    fetch("/api/me").then(r => r.json()).then(({ connected, athlete }) => {
+      const who = document.getElementById("who");
+      if (connected) {
+        who.textContent = "Connecté" + (athlete ? ` : ${athlete.firstname} ${athlete.lastname}` : "");
+        document.getElementById("logout").hidden = false;
+      } else {
+        who.textContent = "Tu te connecteras à Strava au premier téléchargement.";
+      }
+    }).catch(() => {});
+  </script>
+</body>
+</html>
