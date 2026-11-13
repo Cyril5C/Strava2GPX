@@ -48,6 +48,8 @@
     .error { background: var(--err-bg); color: var(--err); padding: 10px 14px; border-radius: 10px; font-size: .92rem; }
     .hint { margin: 20px 0 0; font-size: .82rem; color: var(--muted); }
     code { font-size: .9em; }
+    .hint a { color: var(--muted); }
+    .hint a:hover { color: var(--accent); }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -67,6 +69,7 @@
       Il faut être connecté à Strava dans ce navigateur.<br />
       Formats acceptés : <code>strava.com/activities/…</code>, <code>strava.com/routes/…</code> ou juste l'identifiant d'une activité.
     </p>
+    <p class="hint"><a href="https://github.com/Cyril5C/Strava2GPX">Code source sur GitHub</a></p>
   </main>
 
   <script>
