@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strava → GPX</title>
+  <meta name="description" content="Colle une URL Strava, télécharge le GPX." />
+  <style>
+    :root {
+      --bg: #f6f6f4; --card: #fff; --text: #1d1d1b; --muted: #6b6b66;
+      --accent: #fc4c02; --accent-text: #fff; --border: #e2e2dd; --err-bg: #fdecea; --err: #a1260d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141413; --card: #1f1f1d; --text: #ededea; --muted: #9a9a94;
+        --border: #34342f; --err-bg: #3a1b14; --err: #ffb4a1;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+      background: var(--bg); color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main {
+      width: 100%; max-width: 520px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    h1 span { color: var(--accent); }
+    p.sub { margin: 0 0 24px; color: var(--muted); font-size: .95rem; }
+    form { display: flex; flex-direction: column; gap: 12px; }
+    input {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font: inherit;
+    }
+    input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    button {
+      padding: 12px 16px; border: 0; border-radius: 10px; background: var(--accent);
+      color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    .error { background: var(--err-bg); color: var(--err); padding: 10px 14px; border-radius: 10px; font-size: .92rem; }
+    .hint { margin: 20px 0 0; font-size: .82rem; color: var(--muted); }
+    code { font-size: .9em; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Strava <span>→</span> GPX</h1>
+    <p class="sub">Colle le lien d'une activité ou d'un itinéraire Strava pour télécharger son fichier GPX.</p>
+
+    <form id="form">
+      <input id="url" type="text" inputmode="url" autocomplete="off" autofocus required
+             placeholder="https://www.strava.com/activities/123456789" />
+      <div id="error" class="error" hidden></div>
+      <button type="submit">Télécharger le GPX</button>
+    </form>
+
+    <p class="hint">
+      Il faut être connecté à Strava dans ce navigateur.<br />
+      Formats acceptés : <code>strava.com/activities/…</code>, <code>strava.com/routes/…</code> ou juste l'identifiant d'une activité.
+    </p>
+  </main>
+
+  <script>
+    const form = document.getElementById("form");
+    const input = document.getElementById("url");
+    const errorEl = document.getElementById("error");
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.hidden = !msg;
+    }
+
+    function exportUrl(raw) {
+      const s = raw.trim();
+      if (/^\d+$/.test(s)) return `https://www.strava.com/activities/${s}/export_gpx`;
+
+      let u;
+      try {
+        u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
+      } catch {
+        return { error: "URL invalide." };
+      }
+
+      if (/(^|\.)strava\.app(\.link)?$/i.test(u.hostname)) {
+        return { error: "Lien court de l'app : ouvre-le dans le navigateur, puis copie l'adresse complète (strava.com/activities/…)." };
+      }
+      if (!/(^|\.)strava\.com$/i.test(u.hostname)) {
+        return { error: "Ce n'est pas un lien Strava." };
+      }
+
+      const m = u.pathname.match(/\/(activities|routes)\/(\d+)/);
+      if (!m) return { error: "Lien non reconnu. Attendu : strava.com/activities/… ou strava.com/routes/…" };
+      return `https://www.strava.com/${m[1]}/${m[2]}/export_gpx`;
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const res = exportUrl(input.value);
+      if (typeof res !== "string") return showError(res.error);
+      showError("");
+      window.location.href = res; // Strava renvoie le fichier en pièce jointe : la page reste affichée
+    });
+
+    // Permet aussi https://…/?url=<lien strava> (pratique pour un favori ou un raccourci iOS)
+    const q = new URLSearchParams(location.search).get("url");
+    if (q) { input.value = q; form.requestSubmit(); }
+  </script>
+</body>
+</html>

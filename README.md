@@ -1,44 +1,20 @@
 # Strava → GPX
 
-Petite app web : on colle une URL Strava et on télécharge le GPX.
+Page web statique : on colle une URL Strava et on télécharge le GPX.
 
-- `strava.com/routes/<id>` : export GPX officiel (itinéraires publics ou les tiens)
-- `strava.com/activities/<id>` : GPX reconstruit à partir des streams (latlng, altitude, temps). **Uniquement tes propres activités** (limite de l'API Strava)
-- Liens courts de l'app (`strava.app.link/...`) : acceptés
+**En ligne :** https://cyril5c.github.io/Strava2GPX/
 
-## 1. Créer l'application Strava API
+## Fonctionnement
 
-1. https://www.strava.com/settings/api
-2. **Authorization Callback Domain** : le domaine Railway, par ex. `strava2gpx-production.up.railway.app` (sans `https://`). Pour tester en local : `localhost`.
-3. Récupérer le **Client ID** et le **Client Secret**.
+La page extrait l'identifiant de l'URL et redirige vers le lien d'export officiel de Strava :
 
-## 2. Déployer sur Railway
+- `strava.com/activities/<id>` → `https://www.strava.com/activities/<id>/export_gpx`
+- `strava.com/routes/<id>` → `https://www.strava.com/routes/<id>/export_gpx`
 
-Via GitHub (pousser ce dossier sur un repo, puis *New Project → Deploy from GitHub repo*) ou via la CLI :
+Le téléchargement utilise ta session Strava dans le navigateur : il faut donc être connecté à strava.com. Pas d'API, pas de serveur, pas d'abonnement nécessaire.
 
-```bash
-npm i -g @railway/cli
-railway login
-railway init
-railway up
-```
+Astuce : `https://cyril5c.github.io/Strava2GPX/?url=<lien strava>` lance le téléchargement directement (utile pour un favori ou un raccourci iOS).
 
-Ensuite, dans *Variables* :
+## Hébergement
 
-| Variable | Valeur |
-|---|---|
-| `STRAVA_CLIENT_ID` | Client ID Strava |
-| `STRAVA_CLIENT_SECRET` | Client Secret Strava |
-| `SESSION_SECRET` | une longue chaîne aléatoire (`openssl rand -hex 32`) |
-
-Puis *Settings → Networking → Generate Domain*, et reporter ce domaine dans le champ Callback Domain de Strava.
-
-Railway détecte Node automatiquement et lance `npm start`. Le port est fourni par `PORT`.
-
-## Local
-
-```bash
-npm install
-STRAVA_CLIENT_ID=... STRAVA_CLIENT_SECRET=... SESSION_SECRET=dev npm start
-# http://localhost:3000
-```
+GitHub Pages, branche `main`, dossier racine.
