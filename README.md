@@ -15,6 +15,3 @@ Le téléchargement utilise ta session Strava dans le navigateur : il faut donc 
 
 Astuce : `https://cyril5c.github.io/Strava2GPX/?url=<lien strava>` lance le téléchargement directement (utile pour un favori ou un raccourci iOS).
 
-## Hébergement
-
-GitHub Pages, branche `main`, dossier racine.
